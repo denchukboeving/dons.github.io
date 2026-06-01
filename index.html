@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Dons Espirituais</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ícones Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js para os Gráficos -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .transition-all { transition-property: all; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 300ms; }
+        
+        /* ESTILOS DE IMPRESSÃO (Amigável para PDF) */
+        @media print {
+            body { background: white !important; color: black !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            .print-area { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; }
+            .print-break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
+            canvas { max-width: 100% !important; height: auto !important; }
+            .bg-gradient-to-r { background: #2563eb !important; color: white !important; }
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen">
+
+    <div id="app"></div>
+
+    <script>
+        // --- 1. DADOS DAS PERGUNTAS (120 Perguntas Transcritas e Mapeadas) ---
+        const QUESTIONS_DATA = [
+            /* Seção 1 (1 a 30) - Sinto-me realizado(a) ao... */
+            "… desenvolver planos detalhados para alcançar objetivos definidos.",
+            "… me adaptar aos estilos de vida e costumes de pessoas de outras culturas.",
+            "… falar de Jesus e de meu relacionamento com ele para não-cristãos.",
+            "… ao perceber, quando uma determinada situação vem de Deus ou não.",
+            "… formular objetivos que parecem irreais para outras pessoas. E depois trabalhar de forma decidida para alcançá-los.",
+            "… colocar, de forma generosa, o meu dinheiro e as minhas posses à disposição do Reino de Deus.",
+            "… colaborar na elaboração de materiais que tornem simples e interessante o aprendizado das pessoas.",
+            "… ajudar pessoas na reflexão sobre a sua situação.",
+            "… quando oro por alguém doente, Deus a cura em curto espaço de tempo.",
+            "… trabalhar nos bastidores, em surdina, para apoiar as pessoas que estão realizando um ministério público.",
+            "… receber visitantes em minha casa e fazê-los sentir-se à vontade.",
+            "… orar intensamente por longos períodos.",
+            "… estudar a fundo a palavra para extrair verdades complexas.",
+            "… assumir a frente e guiar um grupo em direção a um propósito.",
+            "… consolar, encorajar e trabalhar com pessoas que estão passando por sofrimento.",
+            "… orar por situações impossíveis e ver intervenções sobrenaturais extraordinárias.",
+            "… cuidar do crescimento espiritual de um grupo de pessoas a longo prazo.",
+            "… transmitir uma mensagem direta de exortação ou correção da parte de Deus.",
+            "… descobrir fatos e princípios na Bíblia que esclarecem situações do tempo atual.",
+            "… adorar a Deus ou orar em uma linguagem espiritual que eu não estudei.",
+            "… organizar recursos, pessoas e tempo para executar projetos complexos na igreja.",
+            "… conviver alegremente com pessoas de nacionalidades ou costumes diferentes.",
+            "… iniciar conversas sobre a salvação com pessoas totalmente desconhecidas.",
+            "… identificar rapidamente as verdadeiras motivações do coração de alguém.",
+            "… manter o ânimo inabalável mesmo quando tudo parece dar errado.",
+            "… ofertar financeiramente de forma anônima para suprir uma necessidade urgente.",
+            "… explicar conceitos bíblicos complexos para que até crianças consigam entender.",
+            "… aconselhar alguém que está diante de uma decisão difícil e não sabe o que fazer.",
+            "… visitar hospitais e lares para orar especificamente pela restauração da saúde.",
+            "… assumir tarefas pesadas para que os líderes foquem na Palavra.",
+
+            /* Seção 2 (31 a 60) - Tenho a capacidade/desejo de... */
+            "… preparar refeições e organizar um ambiente acolhedor para receber hóspedes.",
+            "… acordar de madrugada ou separar momentos exclusivos apenas para interceder.",
+            "… passar horas pesquisando o contexto histórico e teológico de uma passagem.",
+            "… inspirar e mobilizar outras pessoas a trabalharem juntas para uma meta.",
+            "… demonstrar compaixão e chorar com os que choram, sem emitir julgamentos.",
+            "… crer firmemente que Deus pode alterar as leis da natureza para cumprir Seus planos.",
+            "… aconselhar, proteger e guiar espiritualmente as pessoas a mim confiadas.",
+            "… exortar a igreja com mensagens que trazem quebrantamento e despertamento.",
+            "… memorizar e conectar diferentes passagens bíblicas para entender a vontade divina.",
+            "… usar o dom de línguas para edificação pessoal constante nos meus devocionais.",
+            "… delegar tarefas para as pessoas certas, maximizando os resultados da equipe.",
+            "… aprender um novo idioma ou cultura para poder pregar o evangelho com eficácia.",
+            "… apresentar o evangelho de forma clara, levando pessoas a uma decisão por Cristo.",
+            "… sentir imediatamente quando um ensinamento não está alinhado com a Verdade.",
+            "… avançar em projetos para o Reino mesmo sem ter todos os recursos visíveis.",
+            "… viver um padrão de vida mais simples para poder doar mais para a obra.",
+            "… preparar estudos bíblicos sistemáticos e progressivos para o crescimento da igreja.",
+            "… aplicar princípios bíblicos práticos para resolver conflitos pacificamente.",
+            "… ter compaixão e fé inabalável de que Deus ainda cura milagrosamente hoje.",
+            "… perceber necessidades práticas ao meu redor e resolvê-las sem ser mandado.",
+            "… fazer com que pessoas tímidas se sintam parte da família rapidamente.",
+            "… ver respostas claras de Deus às minhas orações pelas outras pessoas.",
+            "… defender a sã doutrina e corrigir erros teológicos com base bíblica.",
+            "… assumir a responsabilidade final pelo sucesso ou fracasso de um projeto ministerial.",
+            "… dedicar meu tempo ouvindo e apoiando pessoas que estão em luto ou depressão.",
+            "… participar de situações onde as forças do mal são confrontadas e vencidas.",
+            "… visitar as ovelhas e saber, pelo nome, das suas lutas, fraquezas e vitórias.",
+            "… declarar a palavra de Deus com ousadia, trazendo luz a situações ocultas.",
+            "… receber compreensões repentinas sobre algo que eu não havia estudado antes.",
+            "… entregar uma mensagem em línguas num culto público (se houver intérprete).",
+
+            /* Seção 3 (61 a 90) - Tive a experiência de... */
+            "… planejar um evento do início ao fim e vê-lo acontecer de forma organizada.",
+            "… sentir-me em casa entre pessoas de uma classe social muito diferente da minha.",
+            "… ver pessoas entregarem suas vidas a Jesus após uma simples conversa comigo.",
+            "… identificar um espírito de engano teológico que a maioria não percebeu.",
+            "… confiar em Deus para uma necessidade impossível e ver a porta abrir.",
+            "… doar quantias que impactaram diretamente o avanço de um ministério.",
+            "… ver pessoas mudarem seus comportamentos após compreenderem um ensino meu.",
+            "… dar um conselho que pareceu simples, mas mudou o rumo da vida de alguém.",
+            "… orar com imposição de mãos sobre um enfermo e ele testemunhar melhora.",
+            "… limpar a igreja ou cuidar dos equipamentos com muita alegria no coração.",
+            "… abrigar pessoas necessitadas em minha própria casa com satisfação.",
+            "… sentir um peso de oração por alguém e descobrir que ela estava em perigo.",
+            "… escrever artigos ou apostilas que ajudam na formação teológica dos irmãos.",
+            "… liderar uma equipe desmotivada e reacender a paixão deles pelo trabalho.",
+            "… visitar hospitais/asilos e levar a presença consoladora de Cristo.",
+            "… testemunhar eventos que só podem ser explicados como ação divina.",
+            "… aconselhar pessoas a longo prazo, vendo os frutos do seu amadurecimento.",
+            "… entregar uma mensagem profética que confirmou o que Deus falava no secreto.",
+            "… ter uma convicção dada pelo Espírito sobre um fato desconhecido por todos.",
+            "… edificar o meu espírito ao orar em línguas em momentos a sós com Deus.",
+            "… reestruturar a administração de um departamento para ser mais eficiente.",
+            "… fazer uma viagem missionária e sentir forte desejo de não voltar mais.",
+            "… criar estratégias criativas para alcançar um grupo específico com o evangelho.",
+            "… rejeitar uma proposta aparentemente boa porque sabia que não era de Deus.",
+            "… contagiar a igreja com a minha fé durante um momento de grave crise.",
+            "… sentir uma alegria transbordante logo após entregar uma oferta generosa.",
+            "… treinar novos professores para atuarem na escola dominical.",
+            "… ser procurado por líderes para opinar sobre decisões críticas da igreja.",
+            "… presenciar curas inexplicáveis à medicina após um momento de clamor.",
+            "… chegar muito mais cedo aos eventos para garantir que tudo estivesse perfeito.",
+
+            /* Seção 4 (91 a 120) - Para mim, é verdade que... */
+            "… ter a casa cheia de convidados é uma das minhas maiores alegrias.",
+            "… a oração não é apenas dever, mas a base da minha respiração espiritual.",
+            "… não me conformo com respostas rasas sobre questões teológicas difíceis.",
+            "… sinto-me responsável pelo direcionamento e visão da congregação.",
+            "… sinto a dor e o sofrimento das pessoas como se fossem a minha própria dor.",
+            "… acredito que milagres como os de Atos devem ser comuns na igreja hoje.",
+            "… o cuidado pastoral corpo-a-corpo é a missão mais importante da igreja.",
+            "… Deus fala à igreja hoje por revelações espontâneas alinhadas à Palavra.",
+            "… acho fascinante compreender os mistérios de Deus e o mundo espiritual.",
+            "… considero o dom de línguas uma evidência poderosa da comunhão com o Espírito.",
+            "… sou melhor a gerenciar processos do que a aconselhar intimamente.",
+            "… sinto que as barreiras linguísticas e sociais não me intimidam.",
+            "… cada alma não alcançada é um peso que me impulsiona a pregar mais.",
+            "… sou extremamente sensível à atmosfera espiritual de um lugar.",
+            "… mantenho a confiança nas promessas mesmo rodeado pela incredulidade.",
+            "… ganho dinheiro não apenas para meu sustento, mas para financiar o Reino.",
+            "… consigo estruturar um pensamento e conteúdo passo a passo naturalmente.",
+            "… encontro facilmente o ponto de equilíbrio que traz paz em discussões.",
+            "… meu primeiro instinto é orar pelos doentes assim que sei que alguém está mal.",
+            "… não me importo de não ser visto; o que importa é ser útil onde há necessidade.",
+            "… gosto de preparar detalhes especiais para honrar os meus convidados.",
+            "… tenho a plena certeza de que a intercessão é a nossa arma mais eficaz.",
+            "… prefiro ler livros de teologia profunda do que leituras cristãs mais leves.",
+            "… consigo enxergar talentos e colocar as pessoas no lugar certo para trabalharem.",
+            "… tenho dificuldade em impor limites rígidos porque prefiro agir com perdão.",
+            "… crer que Deus ainda usa milagres visíveis para validar a pregação.",
+            "… preocupo-me genuinamente em ir atrás de quem não apareceu na congregação.",
+            "… sinto um impulso incontrolável de entregar palavras que recebi de Deus.",
+            "… o estudo detalhado das Escrituras ilumina e direciona toda a minha vida.",
+            "… a comunicação espiritual além do intelecto renova profundamente a minha alma."
+        ];
+
+        // Configuração das Seções e Dons
+        const SECTIONS = [
+            {
+                id: 1, title: "Sinto-me...", subtitle: "Sinto-me realizado(a) ao...",
+                start: 1, end: 30,
+                scale: [
+                    { val: 4, label: "Muitíssimo" }, { val: 3, label: "Muito" },
+                    { val: 2, label: "Mais ou menos" }, { val: 1, label: "Pouco" }, { val: 0, label: "Nem um pouco" }
+                ]
+            },
+            {
+                id: 2, title: "Tenho...", subtitle: "Tenho a capacidade / o desejo de...",
+                start: 31, end: 60,
+                scale: [
+                    { val: 4, label: "Muitíssimo" }, { val: 3, label: "Muito" },
+                    { val: 2, label: "Mais ou menos" }, { val: 1, label: "Pouco" }, { val: 0, label: "Nenhuma" }
+                ]
+            },
+            {
+                id: 3, title: "Tive a experiência de...", subtitle: "Se não tem nenhuma experiência na área, marque a opção zero.",
+                start: 61, end: 90,
+                scale: [
+                    { val: 4, label: "Sempre" }, { val: 3, label: "Frequentemente" },
+                    { val: 2, label: "Algumas vezes" }, { val: 1, label: "Raramente" }, { val: 0, label: "Nunca" }
+                ]
+            },
+            {
+                id: 4, title: "As afirmações a seguir...", subtitle: "Para mim, é verdade que...",
+                start: 91, end: 120,
+                scale: [
+                    { val: 4, label: "Totalmente" }, { val: 3, label: "Muito" },
+                    { val: 2, label: "Mais ou menos" }, { val: 1, label: "Pouco" }, { val: 0, label: "De forma nenhuma" }
+                ]
+            }
+        ];
+
+        const DEFAULT_GIFTS = [
+            "Administração", "Missionário", "Evangelista", "Discernimento", "Fé", 
+            "Provisão/Contribuir", "Ensino", "Sabedoria", "Curas", "Socorros", 
+            "Hospitalidade", "Intercessão", "Mestre", "Liderança/Presidir", "Misericórdia", 
+            "Milagres", "Pastoreio", "Profecia", "Conhecimento", "Línguas"
+        ];
+
+        const initialQuestions = QUESTIONS_DATA.map((text, i) => ({ id: i + 1, text }));
+
+        // --- ESTADO GLOBAL E PERSISTÊNCIA ---
+        let state = {
+            view: 'intro', 
+            userName: '',
+            currentSectionIndex: 0,
+            answers: {},
+            questions: initialQuestions,
+            gifts: [...DEFAULT_GIFTS]
+        };
+
+        const STORAGE_KEY = '@TesteDons:state';
+
+        function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+        function loadState() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    state = { ...state, ...parsed, questions: initialQuestions }; // Força recarregar as perguntas corrigidas
+                } catch (e) { console.error("Erro ao carregar", e); }
+            }
+        }
+
+        // --- MÉTODOS GLOBAIS ---
+        window.setView = (view) => {
+            state.view = view;
+            if (view === 'test' || view === 'intro') window.scrollTo(0, 0);
+            saveState(); render();
+        };
+
+        window.setUserName = (name) => { state.userName = name; saveState(); };
+
+        window.handleAnswer = (qId, value) => {
+            state.answers[qId] = value;
+            saveState(); render(); 
+        };
+
+        window.handleNext = () => {
+            window.scrollTo(0, 0);
+            if (state.currentSectionIndex < SECTIONS.length - 1) {
+                state.currentSectionIndex++;
+                saveState(); render();
+            } else { window.setView('results'); }
+        };
+
+        window.handlePrev = () => {
+            window.scrollTo(0, 0);
+            if (state.currentSectionIndex > 0) {
+                state.currentSectionIndex--;
+                saveState(); render();
+            }
+        };
+
+        window.resetTest = () => {
+            if(confirm("Tem certeza que deseja apagar todo o progresso e começar de novo?")) {
+                state.answers = {}; state.currentSectionIndex = 0; state.userName = '';
+                localStorage.removeItem(STORAGE_KEY);
+                window.setView('intro');
+            }
+        };
+
+        // --- CÁLCULO E GRÁFICOS ---
+        const calculateResults = () => {
+            const results = state.gifts.map((name, index) => ({ name, score: 0, id: index + 1 }));
+            Object.entries(state.answers).forEach(([qIdStr, score]) => {
+                const qId = parseInt(qIdStr, 10);
+                const bucketIndex = (qId - 1) % 20; 
+                if (results[bucketIndex]) results[bucketIndex].score += score;
+            });
+            return results.sort((a, b) => b.score - a.score);
+        };
+
+        let radarChartInstance = null;
+        let lineChartInstance = null;
+
+        function renderCharts(finalScores) {
+            // 1. Gráfico Radar (Top 12 para não sobrecarregar visualmente o radar)
+            const ctxRadar = document.getElementById('radarChart');
+            if (ctxRadar) {
+                const topGifts = finalScores.slice(0, 12);
+                if (radarChartInstance) radarChartInstance.destroy();
+                radarChartInstance = new Chart(ctxRadar, {
+                    type: 'radar',
+                    data: {
+                        labels: topGifts.map(g => g.name),
+                        datasets: [{
+                            label: 'Pontuação', data: topGifts.map(g => g.score),
+                            backgroundColor: 'rgba(37, 99, 235, 0.2)', borderColor: 'rgba(37, 99, 235, 1)',
+                            pointBackgroundColor: 'rgba(37, 99, 235, 1)', borderWidth: 2,
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: { r: { max: 24, ticks: { display: false } } },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+
+            // 2. Gráfico de Linha (Curva de Perfil com todos os 20 dons)
+            const ctxLine = document.getElementById('lineChart');
+            if (ctxLine) {
+                if (lineChartInstance) lineChartInstance.destroy();
+                lineChartInstance = new Chart(ctxLine, {
+                    type: 'line',
+                    data: {
+                        labels: finalScores.map(g => g.name),
+                        datasets: [{
+                            label: 'Pontuação', data: finalScores.map(g => g.score),
+                            borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                            borderWidth: 3, fill: true, tension: 0.4,
+                            pointBackgroundColor: '#2563eb', pointBorderWidth: 2, pointRadius: 4, pointHoverRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true, max: 24, grid: { borderDash: [5, 5] } },
+                            x: { ticks: { maxRotation: 45, minRotation: 45, font: { size: 10 } } }
+                        },
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+
+        // --- RENDERIZADORES DE TELAS ---
+        function getIntroHTML() {
+            const hasProgress = Object.keys(state.answers).length > 0;
+            return `
+                <div class="flex flex-col items-center justify-center p-4 sm:p-6 min-h-screen">
+                    <div class="max-w-3xl w-full bg-white rounded-3xl shadow-xl overflow-hidden print-area">
+                        <div class="bg-blue-600 p-8 sm:p-10 text-center text-white">
+                            <h1 class="text-3xl sm:text-4xl font-extrabold mb-4">Teste de Dons Espirituais</h1>
+                            <p class="text-base sm:text-lg opacity-90">Descubra as suas áreas de maior vocação e talento preenchendo as 120 questões.</p>
+                        </div>
+                        <div class="p-6 sm:p-10 text-center space-y-8">
+                            <div class="max-w-md mx-auto no-print">
+                                <label class="block text-left text-sm font-bold text-slate-700 mb-2">Seu Nome (Opcional, para o Relatório)</label>
+                                <input type="text" onchange="window.setUserName(this.value)" onkeyup="window.setUserName(this.value)" value="${state.userName}" placeholder="Introduza o seu nome..." class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-blue-500 focus:ring-0 outline-none transition-all">
+                            </div>
+                            ${hasProgress ? `<div class="bg-amber-50 border border-amber-200 text-amber-700 p-4 rounded-xl text-sm font-medium flex items-center justify-center no-print"><i data-lucide="save" class="w-5 h-5 mr-2"></i> Você tem um teste salvo. Continue de onde parou.</div>` : ''}
+                            <button onclick="window.setView('test')" class="flex items-center justify-center mx-auto px-10 py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-lg transition-all shadow-lg hover:shadow-blue-500/30">
+                                <i data-lucide="play" class="w-5 h-5 mr-2"></i> ${hasProgress ? 'Continuar Teste' : 'Iniciar o Teste'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getTestHTML() {
+            const currentSection = SECTIONS[state.currentSectionIndex];
+            const sectionQuestions = state.questions.slice(currentSection.start - 1, currentSection.end);
+            const totalQuestions = 120;
+            const answeredCount = Object.keys(state.answers).length;
+            const progressPercentage = Math.round((answeredCount / totalQuestions) * 100);
+            const isSectionComplete = sectionQuestions.every(q => state.answers[q.id] !== undefined);
+
+            const questionsHTML = sectionQuestions.map(q => {
+                const isAnswered = state.answers[q.id] !== undefined;
+                const optionsHTML = currentSection.scale.map(opt => {
+                    const selected = state.answers[q.id] === opt.val;
+                    const btnClass = selected ? 'bg-blue-50 border-blue-500 shadow-sm transform scale-[1.02] z-10' : 'bg-white border-slate-100 hover:border-blue-200 text-slate-500';
+                    return `
+                        <button onclick="window.handleAnswer(${q.id}, ${opt.val})" class="flex-1 flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all duration-200 min-w-[60px] ${btnClass}">
+                            <span class="text-lg sm:text-xl font-black mb-1 ${selected ? 'text-blue-600' : 'text-slate-400'}">${opt.val}</span>
+                            <span class="text-[9px] sm:text-[10px] text-center leading-tight font-medium ${selected ? 'text-blue-700' : 'text-slate-500'}">${opt.label}</span>
+                        </button>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="flex flex-col xl:flex-row xl:items-center justify-between p-4 sm:p-5 bg-white rounded-2xl border-2 transition-all ${isAnswered ? 'border-blue-100 shadow-sm' : 'border-transparent shadow-md'}">
+                        <div class="flex items-start xl:w-1/2 mb-4 xl:mb-0 pr-0 xl:pr-4">
+                            <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold mr-3 sm:mr-4 mt-0.5 text-xs sm:text-sm ${isAnswered ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-500'}">
+                                ${isAnswered ? `<i data-lucide="check-circle" class="w-4 h-4 sm:w-5 sm:h-5"></i>` : q.id}
+                            </div>
+                            <div class="text-base sm:text-lg font-medium leading-snug ${isAnswered ? 'text-slate-500' : 'text-slate-800'}">${q.text}</div>
+                        </div>
+                        <div class="flex overflow-x-auto pb-2 xl:pb-0 w-full xl:w-1/2 gap-2 hide-scrollbar">
+                            ${optionsHTML}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="pb-24 sm:pb-20">
+                    <div class="sticky top-0 z-20 bg-white border-b border-slate-200 shadow-sm px-4 py-3 sm:py-4 mb-6 sm:mb-8">
+                        <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
+                            <div class="font-bold text-slate-700 text-sm sm:text-base text-center sm:text-left">
+                                Secção ${state.currentSectionIndex + 1} de 4: <span class="text-blue-600">${currentSection.title}</span>
+                            </div>
+                            <div class="w-full sm:w-1/2 flex items-center gap-3">
+                                <div class="flex-grow bg-slate-100 rounded-full h-2 sm:h-3 overflow-hidden">
+                                    <div class="bg-blue-500 h-full transition-all duration-300" style="width: ${progressPercentage}%"></div>
+                                </div>
+                                <div class="text-xs sm:text-sm font-bold text-slate-500">${progressPercentage}%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="max-w-4xl mx-auto px-4">
+                        <div class="bg-white rounded-2xl p-5 sm:p-6 shadow-sm border border-slate-100 mb-6 text-center">
+                            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-800 mb-2">${currentSection.title}</h2>
+                            <p class="text-base sm:text-lg text-slate-500">${currentSection.subtitle}</p>
+                        </div>
+                        <div class="space-y-4 sm:space-y-6">${questionsHTML}</div>
+
+                        <div class="mt-8 flex flex-col-reverse sm:flex-row items-center justify-between gap-4">
+                            <button onclick="window.handlePrev()" ${state.currentSectionIndex === 0 ? 'disabled' : ''} class="w-full sm:w-auto flex items-center justify-center px-6 py-3 rounded-full font-bold transition-all ${state.currentSectionIndex === 0 ? 'opacity-0 cursor-default hidden sm:flex' : 'bg-white border-2 border-slate-200 text-slate-600 hover:bg-slate-50'}">
+                                <i data-lucide="chevron-left" class="w-5 h-5 mr-2"></i> Anterior
+                            </button>
+                            ${!isSectionComplete ? `<div class="flex items-center text-amber-600 text-xs sm:text-sm font-medium bg-amber-50 px-4 py-2 rounded-full w-full sm:w-auto justify-center"><i data-lucide="alert-circle" class="w-4 h-4 mr-2"></i> Faltam respostas</div>` : ''}
+                            <button onclick="window.handleNext()" ${!isSectionComplete ? 'disabled' : ''} class="w-full sm:w-auto flex items-center justify-center px-8 py-3 rounded-full font-bold transition-all shadow-lg ${isSectionComplete ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/30' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}">
+                                ${state.currentSectionIndex === 3 ? 'Ver Resultados' : 'Próxima Secção'} <i data-lucide="chevron-right" class="w-5 h-5 ml-2"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function getResultsHTML() {
+            const finalScores = calculateResults();
+            const dataHoje = new Date().toLocaleDateString('pt-PT');
+
+            const barsHTML = finalScores.slice(0, 10).map((item, index) => `
+                <div class="relative print-break-inside-avoid">
+                    <div class="flex justify-between items-end mb-1">
+                        <div class="flex items-center font-bold text-slate-700">
+                            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs mr-3 border border-blue-200">${index + 1}</span>
+                            <span class="text-sm sm:text-base">${item.name}</span>
+                        </div>
+                        <div class="font-mono font-bold text-blue-600 text-sm sm:text-base">${item.score} <span class="text-[10px] text-slate-400 font-normal">pts</span></div>
+                    </div>
+                    <div class="w-full bg-slate-100 rounded-full h-3 sm:h-4 overflow-hidden border border-slate-200">
+                        <div class="h-full rounded-full ${index < 3 ? 'bg-blue-500' : 'bg-slate-400'}" style="width: ${Math.min((item.score / 24) * 100, 100)}%"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            return `
+                <div class="flex flex-col items-center sm:p-6 min-h-screen">
+                    <div class="max-w-5xl w-full bg-white sm:rounded-3xl shadow-xl overflow-hidden print-area sm:mt-10 pb-10">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 sm:p-10 text-white text-center print:bg-none print:text-black print:border-b-2 print:border-slate-800">
+                            <h1 class="text-3xl sm:text-4xl font-extrabold mb-2 print:text-3xl">Relatório de Dons Espirituais</h1>
+                            ${state.userName ? `<p class="text-xl sm:text-2xl font-medium mt-2">Candidato(a): <strong>${state.userName}</strong></p>` : ''}
+                            <p class="text-blue-100 text-sm sm:text-lg mt-2 print:text-slate-500">Avaliação concluída em ${dataHoje}</p>
+                        </div>
+                        
+                        <div class="p-4 sm:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+                            <div>
+                                <h2 class="text-xl sm:text-2xl font-bold mb-6 flex items-center text-slate-800"><i data-lucide="list-ordered" class="w-6 h-6 mr-2 text-blue-600"></i>Top 10 Dons em Evidência</h2>
+                                <div class="space-y-4 sm:space-y-5">${barsHTML}</div>
+                            </div>
+                            <div class="print-break-inside-avoid flex flex-col">
+                                <h2 class="text-xl sm:text-2xl font-bold mb-6 flex items-center text-slate-800"><i data-lucide="radar" class="w-6 h-6 mr-2 text-blue-600"></i>Mapeamento de Perfil</h2>
+                                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 flex-grow min-h-[350px] flex items-center justify-center">
+                                    <canvas id="radarChart" class="w-full h-full max-h-[350px]"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- Gráfico de Linhas (Ocupa as duas colunas inteiras) -->
+                            <div class="col-span-1 lg:col-span-2 print-break-inside-avoid mt-4 border-t border-slate-200 pt-8">
+                                <h2 class="text-xl sm:text-2xl font-bold mb-6 flex items-center text-slate-800"><i data-lucide="trending-up" class="w-6 h-6 mr-2 text-blue-600"></i>Curva de Perfil Geral (20 Dons)</h2>
+                                <div class="bg-slate-50 rounded-2xl p-4 sm:p-6 border border-slate-100 min-h-[350px] flex items-center justify-center">
+                                    <canvas id="lineChart" class="w-full h-full max-h-[350px]"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="p-6 bg-slate-50 border-t border-slate-200 text-center flex flex-col sm:flex-row justify-center gap-4 no-print mx-4 sm:mx-8 rounded-2xl">
+                            <button onclick="window.print()" class="px-8 py-3 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-colors flex items-center justify-center">
+                                <i data-lucide="printer" class="w-5 h-5 mr-2"></i> Imprimir / Gerar PDF
+                            </button>
+                            <button onclick="window.resetTest()" class="px-8 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-100 transition-colors flex items-center justify-center">
+                                <i data-lucide="rotate-ccw" class="w-5 h-5 mr-2"></i> Começar Novo Teste
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- RENDERIZAÇÃO ---
+        function render() {
+            const app = document.getElementById('app');
+            switch(state.view) {
+                case 'intro': app.innerHTML = getIntroHTML(); break;
+                case 'test': app.innerHTML = getTestHTML(); break;
+                case 'results': 
+                    app.innerHTML = getResultsHTML(); 
+                    setTimeout(() => renderCharts(calculateResults()), 100);
+                    break;
+            }
+            lucide.createIcons();
+        }
+
+        loadState(); render();
+    </script>
+</body>
+</html>
